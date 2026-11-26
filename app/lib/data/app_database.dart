@@ -374,6 +374,69 @@ class AppDatabase extends _$AppDatabase {
     await (delete(incomes)..where((income) => income.id.equals(id))).go();
   }
 
+  Future<Map<String, dynamic>> rowsForBackup() async {
+    final values = await Future.wait([
+      select(profiles).get(),
+      select(expenseCategories).get(),
+      select(expenses).get(),
+      select(incomes).get(),
+      select(expenseAttachments).get(),
+    ]);
+    return {
+      'profiles': (values[0] as List<AppProfile>)
+          .map((row) => row.toJson())
+          .toList(),
+      'categories': (values[1] as List<ExpenseCategory>)
+          .map((row) => row.toJson())
+          .toList(),
+      'expenses': (values[2] as List<Expense>)
+          .map((row) => row.toJson())
+          .toList(),
+      'incomes': (values[3] as List<IncomeRecord>)
+          .map((row) => row.toJson())
+          .toList(),
+      'attachments': (values[4] as List<ExpenseAttachment>)
+          .map((row) => row.toJson())
+          .toList(),
+    };
+  }
+
+  Future<void> replaceFromBackup(Map<String, dynamic> tables) async {
+    List<Map<String, dynamic>> rows(String key) {
+      final value = tables[key];
+      if (value is! List) throw FormatException('Tabla inválida: $key');
+      return value.map((row) => Map<String, dynamic>.from(row as Map)).toList();
+    }
+
+    final restoredProfiles = rows('profiles').map(AppProfile.fromJson).toList();
+    final restoredCategories = rows('categories')
+        .map(ExpenseCategory.fromJson)
+        .toList();
+    final restoredExpenses = rows('expenses').map(Expense.fromJson).toList();
+    final restoredIncomes = rows('incomes').map(IncomeRecord.fromJson).toList();
+    final restoredAttachments = rows('attachments')
+        .map(ExpenseAttachment.fromJson)
+        .toList();
+    if (restoredProfiles.isEmpty) {
+      throw const FormatException('El respaldo no contiene perfiles.');
+    }
+
+    await transaction(() async {
+      await delete(expenseAttachments).go();
+      await delete(expenses).go();
+      await delete(incomes).go();
+      await delete(expenseCategories).go();
+      await delete(profiles).go();
+      await batch((batch) {
+        batch.insertAll(profiles, restoredProfiles);
+        batch.insertAll(expenseCategories, restoredCategories);
+        batch.insertAll(expenses, restoredExpenses);
+        batch.insertAll(incomes, restoredIncomes);
+        batch.insertAll(expenseAttachments, restoredAttachments);
+      });
+    });
+  }
+
   Future<void> closeDatabase() => close();
 }
 

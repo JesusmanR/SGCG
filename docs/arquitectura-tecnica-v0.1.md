@@ -67,7 +67,7 @@ Cada función tendrá una vista para presentar datos y un ViewModel para gestion
 
 La primera compilación funcional usa tablas `profiles`, `expense_categories`, `expenses`, `incomes` y `expense_attachments`, con `profile_id` como separación de datos. El modelo con libros (`ledgers` y `ledger_members`) sigue siendo el diseño objetivo si se confirma que habrá libros compartidos; antes de habilitar esa modalidad habrá que añadir la relación y migrar los registros existentes.
 
-La interfaz en desarrollo ya incluye perfiles con clave local, categorías, ingresos y gastos, adjuntos locales, saldo acumulado, papelera y exportación PDF/CSV/XLSX. La rama `codex/ocr-integracion` añade el flujo de consentimiento y revisión OCR y una pasarela preparada para Google Document AI; la pasarela todavía no está desplegada ni configurada. Las copias de seguridad siguen pendientes.
+La interfaz en desarrollo ya incluye perfiles con clave local, categorías, ingresos y gastos, adjuntos locales, saldo acumulado, papelera y exportación PDF/CSV/XLSX. La rama `codex/ocr-integracion` añade el flujo de consentimiento y revisión OCR y una pasarela preparada para Google Document AI; la pasarela todavía no está desplegada ni configurada. La rama `codex/copias-seguridad` añade respaldos portables y restauración transaccional, incluidos los adjuntos. Los respaldos no están cifrados todavía.
 
 ### Aplicación Windows
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/app_database.dart';
+import 'backup_screen.dart';
 import 'screens.dart';
 
 class AppRoot extends StatefulWidget {
@@ -304,6 +305,7 @@ class _HomeShellState extends State<HomeShell> {
       'Informes',
       'Categorías',
       'Papelera',
+      'Respaldos',
     ];
     final pages = [
       DashboardScreen(
@@ -338,6 +340,7 @@ class _HomeShellState extends State<HomeShell> {
         refreshToken: refreshToken,
         onChanged: _refresh,
       ),
+      BackupScreen(database: widget.database, onRestored: widget.onSignOut),
     ];
 
     return Scaffold(
@@ -382,6 +385,7 @@ class _HomeShellState extends State<HomeShell> {
                       Icons.bar_chart_rounded,
                       Icons.category_outlined,
                       Icons.delete_outline,
+                      Icons.backup_outlined,
                     ][i],
                     selected: selectedIndex == i,
                     onTap: () => setState(() => selectedIndex = i),

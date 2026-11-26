@@ -34,7 +34,30 @@ class AttachmentStorage {
     final stored = await File(source.path).copy(destination.path);
     return StoredAttachment(
       originalName: source.name,
-      relativePath: path.join(directoryName, path.basename(stored.path)),
+      relativePath: '$directoryName/${path.basename(stored.path)}',
+      extension: extension,
+      sizeBytes: await stored.length(),
+    );
+  }
+
+  Future<StoredAttachment> saveBytes({
+    required String originalName,
+    required List<int> bytes,
+  }) async {
+    final root = await getApplicationSupportDirectory();
+    final directory = Directory(path.join(root.path, directoryName));
+    await directory.create(recursive: true);
+    final extension = path
+        .extension(originalName)
+        .replaceFirst('.', '')
+        .toLowerCase();
+    final safeName =
+        '${DateTime.now().microsecondsSinceEpoch}_${originalName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_')}';
+    final destination = File(path.join(directory.path, safeName));
+    final stored = await destination.writeAsBytes(bytes, flush: true);
+    return StoredAttachment(
+      originalName: originalName,
+      relativePath: '$directoryName/${path.basename(stored.path)}',
       extension: extension,
       sizeBytes: await stored.length(),
     );
@@ -42,7 +65,11 @@ class AttachmentStorage {
 
   Future<File?> resolve(String relativePath) async {
     final root = await getApplicationSupportDirectory();
-    final file = File(path.join(root.path, relativePath));
+    final portablePath = relativePath.replaceAll('\\', '/');
+    if (!portablePath.startsWith('$directoryName/')) return null;
+    final name = path.posix.basename(portablePath);
+    if (name == '.' || name == '..') return null;
+    final file = File(path.join(root.path, directoryName, name));
     return await file.exists() ? file : null;
   }
 

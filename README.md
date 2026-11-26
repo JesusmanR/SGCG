@@ -4,9 +4,9 @@ Aplicación local de escritorio para registrar y revisar gastos. La documentaci�
 
 ## Estado actual
 
-La versión en desarrollo incluye perfiles locales con clave, ingresos y gastos, categorías personalizables, adjuntos locales, resumen de saldo, papelera recuperable y reportes exportables a PDF, CSV y Excel. La rama `codex/ocr-integracion` añade la interfaz de lectura de comprobantes y una pasarela OCR preparada para Google Document AI.
+La versión en desarrollo incluye perfiles locales con clave, ingresos y gastos, categorías personalizables, adjuntos locales, resumen de saldo, papelera recuperable y reportes exportables a PDF, CSV y Excel. La rama `codex/ocr-integracion` añade la interfaz de lectura de comprobantes y una pasarela OCR preparada para Google Document AI. La rama `codex/copias-seguridad` añade respaldos locales y restauración.
 
-Los datos se guardan localmente en SQLite. OCR aún requiere crear y configurar el servicio de Google Cloud antes de poder usarse. Las copias de seguridad y el instalador de Windows siguen pendientes.
+Los datos se guardan localmente en SQLite. OCR aún requiere crear y configurar el servicio de Google Cloud antes de poder usarse. El archivo de respaldo incluye datos, verificadores de clave y adjuntos, y no está cifrado; se debe guardar de forma privada. El instalador de Windows sigue pendiente.
 
 ## Ejecutar en Windows
 
