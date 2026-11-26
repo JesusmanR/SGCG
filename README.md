@@ -4,9 +4,9 @@ Aplicación local de escritorio para registrar y revisar gastos. La documentaci�
 
 ## Estado actual
 
-La versión en desarrollo incluye perfiles locales con clave, ingresos y gastos, categorías personalizables, adjuntos locales, resumen de saldo, papelera recuperable y reportes exportables a PDF, CSV y Excel.
+La versión en desarrollo incluye perfiles locales con clave, ingresos y gastos, categorías personalizables, adjuntos locales, resumen de saldo, papelera recuperable y reportes exportables a PDF, CSV y Excel. La rama `codex/ocr-integracion` añade la interfaz de lectura de comprobantes y una pasarela OCR preparada para Google Document AI.
 
-Los datos se guardan localmente en SQLite. El OCR, las copias de seguridad y el instalador todavía están pendientes.
+Los datos se guardan localmente en SQLite. OCR aún requiere crear y configurar el servicio de Google Cloud antes de poder usarse. Las copias de seguridad y el instalador de Windows siguen pendientes.
 
 ## Ejecutar en Windows
 
@@ -23,6 +23,8 @@ app/build/windows/x64/runner/Release/control_gastos.exe
 ```
 
 Los ejecutables y ZIP portables se generan localmente y no se guardan en Git. Para distribuir una compilación, extrae el contenido completo de la carpeta `Release` y abre `control_gastos.exe`; todavía no hay instalador.
+
+La integración OCR se configura al compilar con `OCR_GATEWAY_URL` (dirección HTTPS terminada en `/v1/receipt:analyze`) y `OCR_GATEWAY_TOKEN`. La pasarela y sus pasos de configuración están en `backend/ocr-gateway/README.md`. El token embebido en una compilación de escritorio es extraíble; no se debe distribuir una compilación configurada con un token compartido.
 
 Para compilar nuevamente la versión Windows:
 

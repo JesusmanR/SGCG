@@ -67,7 +67,7 @@ Cada función tendrá una vista para presentar datos y un ViewModel para gestion
 
 La primera compilación funcional usa tablas `profiles`, `expense_categories`, `expenses`, `incomes` y `expense_attachments`, con `profile_id` como separación de datos. El modelo con libros (`ledgers` y `ledger_members`) sigue siendo el diseño objetivo si se confirma que habrá libros compartidos; antes de habilitar esa modalidad habrá que añadir la relación y migrar los registros existentes.
 
-La interfaz inicial ya incluye perfiles con clave local, categorías, ingresos y gastos, adjuntos locales, saldo acumulado, papelera y exportación PDF/CSV/XLSX. No incluye todavía OCR ni copias de seguridad.
+La interfaz en desarrollo ya incluye perfiles con clave local, categorías, ingresos y gastos, adjuntos locales, saldo acumulado, papelera y exportación PDF/CSV/XLSX. La rama `codex/ocr-integracion` añade el flujo de consentimiento y revisión OCR y una pasarela preparada para Google Document AI; la pasarela todavía no está desplegada ni configurada. Las copias de seguridad siguen pendientes.
 
 ### Aplicación Windows
 
@@ -126,7 +126,7 @@ La aplicación de escritorio no incluirá una clave API del proveedor: cualquier
 5. La pasarela devuelve campos estructurados y elimina cualquier archivo temporal; no guarda recibos ni resultados de forma permanente.
 6. La aplicación permite corregir los datos antes de guardarlos como gasto.
 
-La pasarela introduce un componente en la nube, aunque los gastos y adjuntos sigan locales. Antes de habilitar OCR en producción se deberán definir el proveedor, la región, el costo, la política de retención, límites por usuario y una forma de evitar abuso del endpoint. Las claves permanecerán en el servidor y los registros técnicos no contendrán imágenes ni datos personales del recibo.
+La pasarela introduce un componente en la nube, aunque los gastos y adjuntos sigan locales. El prototipo selecciona Google Document AI Expense Parser, admite archivos de hasta 15 MB y usa el máximo de 10 páginas por solicitud síncrona. Google indica que el contenido síncrono se procesa en memoria y no se guarda en disco. La tarifa publicada es USD 0,10 por hasta 10 páginas; se debe revisar antes de desplegar. La pasarela debe tener una región elegida, límites de uso y autenticación adecuada antes de habilitarse en producción.
 
 ## 6. Modelo de acceso flexible
 
@@ -162,6 +162,6 @@ La selección concreta de paquetes de gráficos, XLSX, PDF, cifrado e instalador
 
 1. **Datos por perfil o compartidos:** sigue pendiente la respuesta. Hasta entonces se usa como supuesto un libro privado por perfil, con soporte de modelo para compartir posteriormente.
 2. **Cifrado local:** decidir si se cifran base y adjuntos con una clave protegida por Windows, y cómo afectará a la recuperación de clave y a copias de seguridad.
-3. **Proveedor y despliegue OCR:** confirmar Google Document AI y elegir región, hosting de la pasarela, límites de uso y responsable de los costos.
+3. **Despliegue OCR:** crear el proyecto y Expense Parser en Google Cloud, elegir región y responsable de costos, configurar la pasarela y reemplazar el token compartido de prototipo por autenticación por usuario o dispositivo y límites de consumo antes de distribuir la aplicación.
 4. **Nombre y estilo visual:** pendiente.
 

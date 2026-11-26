@@ -3,6 +3,7 @@ import 'package:file_selector/file_selector.dart';
 
 import '../data/app_database.dart';
 import '../data/attachment_storage.dart';
+import '../data/receipt_ocr_service.dart';
 import '../data/report_export_service.dart';
 
 String formatMoney(int cents) {
@@ -1078,10 +1079,14 @@ class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
   late Future<List<ExpenseCategory>> categoriesFuture;
   late Future<List<ExpenseAttachment>> attachmentsFuture;
   final attachmentStorage = AttachmentStorage();
+  static const ocrService = ReceiptOcrService();
   XFile? pendingAttachment;
   String? categoryId;
   DateTime expenseDate = DateTime.now();
   bool saving = false;
+  bool analyzingReceipt = false;
+  String? ocrNotice;
+  double? ocrConfidence;
 
   @override
   void initState() {
@@ -1200,6 +1205,77 @@ class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
       return;
     }
     setState(() => pendingAttachment = file);
+  }
+
+  Future<void> _analyzeReceipt() async {
+    final file = pendingAttachment;
+    if (file == null) return;
+    if (!ocrService.isConfigured) {
+      setState(() {
+        ocrNotice = 'El servicio OCR todavía no está configurado. Puedes completar el gasto manualmente.';
+      });
+      return;
+    }
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leer comprobante'),
+        content: const Text(
+          'Para sugerir el comercio, el valor y la fecha, se enviará este archivo por internet a Google Document AI. Google indica que las solicitudes inmediatas se procesan en memoria y no se guardan en disco. El procesamiento puede generar costos. Revisa y corrige los datos antes de guardar.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Enviar y leer'),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !mounted) return;
+    setState(() {
+      analyzingReceipt = true;
+      ocrNotice = null;
+    });
+    try {
+      final suggestion = await ocrService.analyze(file);
+      if (!mounted) return;
+      if (suggestion.merchant != null) {
+        merchantController.text = suggestion.merchant!;
+        if (nameController.text.trim().isEmpty) {
+          nameController.text = 'Gasto en ${suggestion.merchant}';
+        }
+      }
+      final isCop =
+          suggestion.currency == null ||
+          suggestion.currency!.toUpperCase() == 'COP';
+      if (suggestion.amountCents != null && isCop) {
+        final amount = suggestion.amountCents!;
+        amountController.text = (amount / 100)
+            .toStringAsFixed(amount % 100 == 0 ? 0 : 2)
+            .replaceAll('.', ',');
+      }
+      if (suggestion.date != null) {
+        expenseDate = DateTime(
+          suggestion.date!.year,
+          suggestion.date!.month,
+          suggestion.date!.day,
+        );
+      }
+      setState(() {
+        ocrConfidence = suggestion.confidence;
+        ocrNotice = suggestion.currency != null && !isCop
+            ? 'Se detectó ${suggestion.currency}; revisa el valor y conviértelo a COP.'
+            : 'Lectura lista. Verifica los datos antes de guardar.';
+      });
+    } on ReceiptOcrException catch (error) {
+      if (mounted) setState(() => ocrNotice = error.message);
+    } finally {
+      if (mounted) setState(() => analyzingReceipt = false);
+    }
   }
 
   @override
@@ -1330,6 +1406,43 @@ class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
                     ),
                   ],
                 ),
+                if (pendingAttachment != null &&
+                    const ['jpg', 'jpeg', 'png', 'pdf'].contains(
+                      pendingAttachment!.name.split('.').last.toLowerCase(),
+                    )) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: analyzingReceipt ? null : _analyzeReceipt,
+                      icon: analyzingReceipt
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.document_scanner_outlined),
+                      label: Text(
+                        analyzingReceipt
+                            ? 'Leyendo comprobante…'
+                            : 'Leer datos',
+                      ),
+                    ),
+                  ),
+                ],
+                if (ocrNotice != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        ocrConfidence == null
+                            ? ocrNotice!
+                            : '$ocrNotice (confianza ${(ocrConfidence! * 100).round()} %)',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
                 if (widget.expense != null)
                   FutureBuilder<List<ExpenseAttachment>>(
                     future: attachmentsFuture,
