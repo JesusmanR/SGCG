@@ -6,7 +6,7 @@ Aplicación local de escritorio para registrar y revisar gastos. La documentaci�
 
 La versión en desarrollo incluye perfiles locales con clave, ingresos y gastos, categorías personalizables, adjuntos locales, resumen de saldo, papelera recuperable y reportes exportables a PDF, CSV y Excel. La rama `codex/ocr-integracion` añade la interfaz de lectura de comprobantes y una pasarela OCR preparada para Google Document AI. La rama `codex/copias-seguridad` añade respaldos locales y restauración.
 
-Los datos se guardan localmente en SQLite. OCR aún requiere crear y configurar el servicio de Google Cloud antes de poder usarse. El archivo de respaldo incluye datos, verificadores de clave y adjuntos, y no está cifrado; se debe guardar de forma privada. El instalador de Windows sigue pendiente.
+Los datos se guardan localmente en SQLite. OCR aún requiere crear y configurar el servicio de Google Cloud antes de poder usarse. El archivo de respaldo incluye datos, verificadores de clave y adjuntos, y no está cifrado; se debe guardar de forma privada. La rama `codex/instalador-windows` añade el instalador de Windows.
 
 ## Ejecutar en Windows
 
@@ -22,7 +22,7 @@ La compilación actual está en:
 app/build/windows/x64/runner/Release/control_gastos.exe
 ```
 
-Los ejecutables y ZIP portables se generan localmente y no se guardan en Git. Para distribuir una compilación, extrae el contenido completo de la carpeta `Release` y abre `control_gastos.exe`; todavía no hay instalador.
+Los ejecutables y el instalador se generan localmente y no se guardan en Git. Para usar el programa sin instalarlo, extrae el contenido completo de la carpeta `Release` y abre `control_gastos.exe`.
 
 La integración OCR se configura al compilar con `OCR_GATEWAY_URL` (dirección HTTPS terminada en `/v1/receipt:analyze`) y `OCR_GATEWAY_TOKEN`. La pasarela y sus pasos de configuración están en `backend/ocr-gateway/README.md`. El token embebido en una compilación de escritorio es extraíble; no se debe distribuir una compilación configurada con un token compartido.
 
@@ -32,7 +32,17 @@ Para compilar nuevamente la versión Windows:
 flutter build windows --release
 ```
 
-El ejecutable se distribuye junto con los archivos de la carpeta `Release`; todavía no hay instalador.
+El ejecutable se distribuye junto con los archivos de la carpeta `Release`.
+
+## Crear instalador de Windows
+
+Con Inno Setup 7 instalado, desde la carpeta raíz del proyecto ejecuta:
+
+```powershell
+.\scripts\build-windows-installer.ps1
+```
+
+El instalador se genera en `dist/installer/Control-de-gastos-Setup-1.0.0.exe`. Se instala en el perfil de Windows, crea un acceso directo opcional en el escritorio y conserva los datos personales al desinstalar.
 
 ## Documentos del proyecto
 
