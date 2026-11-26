@@ -108,11 +108,11 @@ Para reflejar dinero que ya existía antes de empezar a usar la aplicación, se 
 ### 7.2 Registrar un gasto desde un documento
 
 1. El usuario selecciona una imagen JPG/JPEG, PNG o PDF, o toma una foto cuando el equipo disponga de cámara.
-2. Antes de enviarlo, la aplicación informa que el documento se transmitirá al servicio en línea de reconocimiento.
-3. El servicio propone campos como comercio, fecha, total y, cuando sea posible, impuestos o subtotales.
+2. La aplicación indica que el reconocimiento se ejecuta localmente en el equipo.
+3. Tesseract propone texto y la aplicación intenta identificar comercio, fecha y total.
 4. La aplicación presenta los valores detectados y permite corregirlos. Ningún dato se guarda como gasto hasta que el usuario confirme.
 5. El usuario asigna o confirma nombre, categoría y método de pago, y guarda.
-6. Si no hay conexión o falla el reconocimiento, el usuario puede completar el formulario manualmente.
+6. Si falla el reconocimiento, el usuario puede completar el formulario manualmente.
 
 Los valores detectados se consideran sugerencias, no una validación contable. El OCR inicial se limitará a documentos de hasta 10 páginas y 15 MB. El documento original solo se conserva como adjunto del gasto después de confirmar el registro. DOCX y otros documentos se podrán adjuntar, pero no se procesarán con OCR en la primera versión.
 
@@ -155,8 +155,8 @@ Cada informe incluirá periodo, fecha de generación, total general, totales por
 - El usuario podrá crear una copia de seguridad en una ubicación elegida y restaurarla desde la aplicación.
 - La copia debe incluir base de datos, categorías, métodos de pago y adjuntos.
 - Antes de restaurar, se mostrará qué datos locales serán reemplazados y se recomendará crear una copia actual.
-- No se enviarán a un servidor los gastos ni los adjuntos, excepto el documento que el usuario elija procesar con OCR.
-- La integración de OCR debe documentar proveedor, retención, ubicación de procesamiento, costos y uso de datos antes de seleccionar el servicio.
+- Los gastos y adjuntos no se envían a servidores en la versión local. El OCR se ejecuta en el dispositivo y no tiene costo por uso.
+- Si en el futuro se incorpora OCR remoto, deberá aprobarse y documentar el tratamiento de datos antes de activarlo.
 
 ## 10. Requisitos de calidad
 
@@ -177,7 +177,7 @@ Cada informe incluirá periodo, fecha de generación, total general, totales por
 5. Los informes diario, semanal, mensual y anual respetan los límites de calendario definidos.
 6. PDF, CSV y XLSX contienen el mismo conjunto filtrado de gastos y totales coherentes.
 7. El OCR siempre permite revisar y corregir los campos antes de guardar.
-8. Si no hay conexión, el registro manual y la consulta de datos continúan disponibles.
+8. El registro, la consulta y el OCR local funcionan sin conexión.
 9. Una copia creada y restaurada recupera los gastos y adjuntos incluidos.
 10. Cada gasto registra el perfil que lo creó y el último perfil que lo modificó.
 11. Un perfil no puede consultar los gastos de otro perfil en la primera versión.
@@ -191,11 +191,11 @@ Cada informe incluirá periodo, fecha de generación, total general, totales por
 1. **Identificación:** habrá inicio de sesión con perfiles locales para saber quién está usando la aplicación. El nombre e identidad visual del producto siguen pendientes; se usará un nombre provisional durante el desarrollo.
 2. **Eliminación:** los gastos irán a una papelera recuperable; la eliminación definitiva requerirá una acción separada.
 3. **Adjuntos:** JPG/JPEG, PNG y PDF, hasta 15 MB por archivo. Para OCR, máximo 10 páginas por documento. Otros tipos comunes podrán guardarse como adjuntos, pero no tendrán OCR inicialmente.
-4. **OCR:** se recomienda evaluar Google Cloud Document AI Expense Parser. Su documentación indica extracción de datos de gastos, soporte para español y procesamiento síncrono en memoria sin persistir documentos en disco. La tarifa publicada es USD 0,10 por unidad de hasta 10 páginas. Se debe validar precisión con recibos colombianos antes de adoptarlo. [Procesador y lenguajes](https://docs.cloud.google.com/document-ai/docs/processors-list), [privacidad y tratamiento](https://docs.cloud.google.com/document-ai/docs/security), [precios](https://cloud.google.com/document-ai/pricing).
+4. **OCR:** Tesseract 5 con el modelo `spa` de `tessdata_fast` se empaqueta para lectura local sin conexión ni cargos por uso. El parser propio solo propone comercio, fecha y total; se debe medir la precisión con recibos colombianos reales y permitir siempre la revisión manual. [Instalación de Tesseract](https://github.com/tesseract-ocr/tessdoc/blob/main/Installation.md), [modelos de idioma](https://github.com/tesseract-ocr/tessdoc/blob/main/Data-Files.md).
 5. **Respaldo:** copia manual en la primera versión; los recordatorios podrán añadirse después.
 6. **Instalador:** instalación por usuario para evitar permisos de administrador.
 
-La clave del proveedor OCR no debe incluirse dentro del instalador de Windows. El diseño técnico debe contemplar una pasarela segura para proteger credenciales y limitar costos; el documento que el usuario elija procesar sí se enviará al servicio, previa confirmación.
+El OCR local no necesita claves ni transmite documentos. El instalador debe incluir el motor, el modelo español y los avisos de licencia correspondientes.
 
 ## 13. Evolución futura
 

@@ -11,7 +11,7 @@
 - Mantener visible la fecha y el perfil activo.
 - Permitir registrar un gasto desde las pantallas principales en pocos pasos.
 - No depender del color como único medio para distinguir categorías o estados.
-- Usar confirmación antes de borrar definitivamente, restaurar una copia o enviar un documento a OCR.
+- Usar confirmación antes de borrar definitivamente o restaurar una copia.
 - Ofrecer estados claros cuando no hay datos, hay un error o no hay conexión.
 - Priorizar una interfaz de escritorio con navegación lateral; en móvil se transformará en navegación compacta.
 
@@ -126,9 +126,8 @@ El formulario validará valores mayores que cero, campos requeridos y categoría
 ### 3.5 Reconocimiento y revisión OCR
 
 1. **Seleccionar:** elegir imagen o PDF. Mostrar formatos, tamaño y páginas permitidas.
-2. **Confirmar envío:** explicar que el documento se enviará al servicio externo; botones “Enviar para reconocer” y “Cancelar”.
-3. **Procesar:** mostrar estado y permitir cancelar si el proveedor lo admite.
-4. **Revisar:** mostrar el recibo y los campos sugeridos lado a lado.
+2. **Procesar localmente:** informar que el comprobante se analiza en el dispositivo y mostrar el estado de lectura.
+3. **Revisar:** mostrar los campos sugeridos y permitir corregirlos.
 
 ```text
 ┌────────────────────────────────────────────────────────────────┐
@@ -193,7 +192,7 @@ Listado con fecha de eliminación, nombre, categoría, valor y perfil que lo eli
 
 - **Sin gastos:** sugerir registrar el primer gasto y crear categorías propias.
 - **Sin resultados:** permitir limpiar filtros.
-- **Sin conexión:** indicar que OCR no está disponible; mantener registro y consulta local.
+- **Sin conexión:** OCR local, registro y consulta continúan disponibles.
 - **OCR sin resultado:** ofrecer corrección manual.
 - **Guardado:** confirmar que el gasto quedó registrado y permitir volver al listado.
 - **Error de archivo:** indicar si el adjunto no existe o no se puede abrir sin perder los demás datos.

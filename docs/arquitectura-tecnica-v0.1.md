@@ -12,7 +12,7 @@
 | Aplicación | Flutter y Dart | Permite comenzar en Windows y compartir buena parte del código con Android, iOS y web. Cada plataforma requerirá adaptar y validar sus pantallas. |
 | Persistencia Windows | SQLite local mediante Drift | Los datos son estructurados y relacionales; Drift añade consultas tipadas, flujos reactivos y migraciones de esquema. |
 | Organización | Vistas + ViewModels + repositorios + servicios | Separa la interfaz de las reglas y del almacenamiento, permitiendo cambiar la base local o incorporar una API sin rehacer pantallas. |
-| OCR | Servicio cloud de reconocimiento detrás de una pasarela propia | Evita incluir claves privadas del proveedor en el instalador y permite controlar tamaño, uso y tratamiento de documentos. |
+| OCR | Tesseract 5 local con modelo español y extracción de campos en Dart | Funciona sin conexión, no envía comprobantes y no genera cargos por documento. |
 | Archivos adjuntos | Archivos locales con metadatos en SQLite | Evita guardar imágenes y PDF grandes como datos binarios dentro de la base. |
 | Instalación | Instalador de Windows por usuario | Reduce la necesidad de permisos de administrador y mantiene los datos en el perfil de Windows. |
 
@@ -28,13 +28,12 @@ flowchart LR
     R --> DB[(SQLite local / Drift)]
     R --> FS[(Adjuntos y copias locales)]
     R --> EX[Exportación PDF / CSV / XLSX]
-    UI -->|Documento con confirmación| GW[Pasarela segura de OCR]
-    GW --> OCR[Google Document AI u otro proveedor]
-    OCR -->|Campos sugeridos| GW
-    GW -->|Resultado sin guardar el documento| UI
+    UI -->|Imagen o página PDF| OCR[Tesseract local + modelo español]
+    OCR -->|Texto reconocido| PARSER[Parser local de campos]
+    PARSER -->|Sugerencias editables| UI
 ```
 
-Las operaciones habituales no dependen de internet. La conexión se usa solo para procesar el documento que el usuario seleccione y para futuras funciones sincronizadas, si se aprueban.
+Las operaciones habituales y el OCR no dependen de internet. La conexión se usará para futuras funciones sincronizadas, si se aprueban.
 
 ## 3. Estructura de la aplicación
 
@@ -67,7 +66,7 @@ Cada función tendrá una vista para presentar datos y un ViewModel para gestion
 
 La primera compilación funcional usa tablas `profiles`, `expense_categories`, `expenses`, `incomes` y `expense_attachments`, con `profile_id` como separación de datos. El modelo con libros (`ledgers` y `ledger_members`) sigue siendo el diseño objetivo si se confirma que habrá libros compartidos; antes de habilitar esa modalidad habrá que añadir la relación y migrar los registros existentes.
 
-La interfaz en desarrollo ya incluye perfiles con clave local, categorías, ingresos y gastos, adjuntos locales, saldo acumulado, papelera y exportación PDF/CSV/XLSX. La rama `codex/ocr-integracion` añade el flujo de consentimiento y revisión OCR y una pasarela preparada para Google Document AI; la pasarela todavía no está desplegada ni configurada. La rama `codex/copias-seguridad` añade respaldos portables y restauración transaccional, incluidos los adjuntos. Los respaldos no están cifrados todavía. La rama `codex/instalador-windows` genera un instalador de Windows con Inno Setup.
+La interfaz en desarrollo ya incluye perfiles con clave local, categorías, ingresos y gastos, adjuntos locales, saldo acumulado, papelera y exportación PDF/CSV/XLSX. El OCR local usa Tesseract para imágenes y `pdfx` para convertir páginas PDF en imágenes temporales; el parser propone comercio, total y fecha. La rama `codex/copias-seguridad` añade respaldos portables y restauración transaccional, incluidos los adjuntos. Los respaldos no están cifrados todavía. La rama `codex/instalador-windows` genera un instalador de Windows con Inno Setup.
 
 ### Aplicación Windows
 
@@ -76,7 +75,7 @@ La interfaz en desarrollo ya incluye perfiles con clave local, categorías, ingr
 - Ejecuta cálculos de totales e informes localmente.
 - Persiste gastos, categorías y perfiles mediante repositorios.
 - Exporta informes en el equipo.
-- Solicita consentimiento justo antes de enviar un documento a OCR.
+- Procesa el comprobante localmente; los campos reconocidos son sugerencias que la persona debe revisar.
 
 ### Base de datos local
 
@@ -115,18 +114,14 @@ La papelera se modelará con `deleted_at` y `deleted_by`. Los informes excluirá
 - El aislamiento de registros en repositorios se aplicará siempre por `ledger_id` activo.
 - El inicio local identifica perfiles dentro de la aplicación; no equivale a una cuenta en línea ni protege frente a otra persona con acceso directo a los archivos del mismo Windows. La decisión de cifrar la base y los adjuntos en reposo debe cerrarse antes de implementar el login.
 
-## 5. OCR y seguridad de credenciales
+## 5. OCR local
 
-La aplicación de escritorio no incluirá una clave API del proveedor: cualquier secreto distribuido dentro del `.exe` podría extraerse. El flujo propuesto es:
+1. La aplicación acepta imágenes JPG/JPEG y PNG, además de PDF, hasta 15 MB y 10 páginas.
+2. En PDF, `pdfx` rasteriza cada página en un directorio temporal; las imágenes temporales se eliminan al finalizar.
+3. Tesseract procesa las imágenes con el modelo de español incluido en el instalador. El proceso corre en el mismo equipo.
+4. Un parser en Dart identifica posibles campos de comercio, total y fecha. Las sugerencias se cargan al formulario y siempre se revisan antes de guardar.
 
-1. La aplicación limita el archivo al tipo, tamaño y páginas permitidos.
-2. Solicita confirmación y explica que el documento se enviará a un servicio externo.
-3. Envía el archivo por HTTPS a una pasarela de OCR.
-4. La pasarela valida autorización, límites de uso y tamaño, y reenvía la solicitud al proveedor.
-5. La pasarela devuelve campos estructurados y elimina cualquier archivo temporal; no guarda recibos ni resultados de forma permanente.
-6. La aplicación permite corregir los datos antes de guardarlos como gasto.
-
-La pasarela introduce un componente en la nube, aunque los gastos y adjuntos sigan locales. El prototipo selecciona Google Document AI Expense Parser, admite archivos de hasta 15 MB y usa el máximo de 10 páginas por solicitud síncrona. Google indica que el contenido síncrono se procesa en memoria y no se guarda en disco. La tarifa publicada es USD 0,10 por hasta 10 páginas; se debe revisar antes de desplegar. La pasarela debe tener una región elegida, límites de uso y autenticación adecuada antes de habilitarse en producción.
+No se transmiten documentos ni se usa una API de pago. La precisión depende de la calidad de la imagen y de los formatos de recibo; los valores detectados no sustituyen la revisión de la persona. El instalador debe incluir Tesseract, sus bibliotecas y los avisos de licencia de sus componentes.
 
 ## 6. Modelo de acceso flexible
 

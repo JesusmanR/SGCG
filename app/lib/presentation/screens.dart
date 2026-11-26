@@ -1212,30 +1212,10 @@ class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
     if (file == null) return;
     if (!ocrService.isConfigured) {
       setState(() {
-        ocrNotice = 'El servicio OCR todavía no está configurado. Puedes completar el gasto manualmente.';
+        ocrNotice = 'No se encontró el motor de lectura en español. Puedes completar el gasto manualmente.';
       });
       return;
     }
-    final approved = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Leer comprobante'),
-        content: const Text(
-          'Para sugerir el comercio, el valor y la fecha, se enviará este archivo por internet a Google Document AI. Google indica que las solicitudes inmediatas se procesan en memoria y no se guardan en disco. El procesamiento puede generar costos. Revisa y corrige los datos antes de guardar.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Enviar y leer'),
-          ),
-        ],
-      ),
-    );
-    if (approved != true || !mounted) return;
     setState(() {
       analyzingReceipt = true;
       ocrNotice = null;
@@ -1425,7 +1405,7 @@ class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
                       label: Text(
                         analyzingReceipt
                             ? 'Leyendo comprobante…'
-                            : 'Leer datos',
+                            : 'Leer datos en el dispositivo',
                       ),
                     ),
                   ),

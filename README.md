@@ -4,9 +4,9 @@ Aplicación local de escritorio para registrar y revisar gastos. La documentaci�
 
 ## Estado actual
 
-La versión en desarrollo incluye perfiles locales con clave, ingresos y gastos, categorías personalizables, adjuntos locales, resumen de saldo, papelera recuperable y reportes exportables a PDF, CSV y Excel. La rama `codex/ocr-integracion` añade la interfaz de lectura de comprobantes y una pasarela OCR preparada para Google Document AI. La rama `codex/copias-seguridad` añade respaldos locales y restauración.
+La versión en desarrollo incluye perfiles locales con clave, ingresos y gastos, categorías personalizables, adjuntos locales, resumen de saldo, papelera recuperable y reportes exportables a PDF, CSV y Excel. El reconocimiento OCR se ejecuta localmente con Tesseract y un modelo de español; los PDF se convierten a imágenes en el dispositivo. La rama `codex/copias-seguridad` añade respaldos locales y restauración, y `codex/instalador-windows` prepara el instalador.
 
-Los datos se guardan localmente en SQLite. OCR aún requiere crear y configurar el servicio de Google Cloud antes de poder usarse. El archivo de respaldo incluye datos, verificadores de clave y adjuntos, y no está cifrado; se debe guardar de forma privada. La rama `codex/instalador-windows` añade el instalador de Windows.
+Los datos se guardan localmente en SQLite. El OCR no requiere conexión ni envía documentos a internet. El archivo de respaldo incluye datos, verificadores de clave y adjuntos, y no está cifrado; se debe guardar de forma privada.
 
 ## Ejecutar en Windows
 
@@ -24,7 +24,7 @@ app/build/windows/x64/runner/Release/control_gastos.exe
 
 Los ejecutables y el instalador se generan localmente y no se guardan en Git. Para usar el programa sin instalarlo, extrae el contenido completo de la carpeta `Release` y abre `control_gastos.exe`.
 
-La integración OCR se configura al compilar con `OCR_GATEWAY_URL` (dirección HTTPS terminada en `/v1/receipt:analyze`) y `OCR_GATEWAY_TOKEN`. La pasarela y sus pasos de configuración están en `backend/ocr-gateway/README.md`. El token embebido en una compilación de escritorio es extraíble; no se debe distribuir una compilación configurada con un token compartido.
+Para preparar el entorno de desarrollo, instala Tesseract 5 para Windows y ejecuta `scripts/prepare-local-ocr.ps1`. El script copia el motor y sus DLL a `.tools/tesseract`, descarga el modelo español y conserva la licencia. El instalador incluye estos componentes automáticamente. Si no se encuentra el motor, el registro manual sigue disponible.
 
 Para compilar nuevamente la versión Windows:
 

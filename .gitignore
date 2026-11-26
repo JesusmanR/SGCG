@@ -1,4 +1,6 @@
 .tools/flutter/
+.tools/tesseract/
+.tools/downloads/
 dist/
 app/.dart_tool/
 app/build/
